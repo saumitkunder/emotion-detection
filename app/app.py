@@ -1,10 +1,11 @@
 import os
 import streamlit as st
 import tensorflow as tf
+import numpy as np
 from utils import preprocess_audio, get_emotion_label
 
 # Path to the model
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "ann_model.h5")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "emotion_rnn_model.h5")
 
 # Load the model with caching
 @st.cache_resource
