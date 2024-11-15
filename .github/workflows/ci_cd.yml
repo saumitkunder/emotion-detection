@@ -31,10 +31,9 @@ jobs:
         pip install pytest
 
     # Step 4: Set PYTHONPATH and Run unit tests
-    - name: Run unit tests
-      env:
-        PYTHONPATH: ${{ github.workspace }}
+    - name: Run tests
       run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
         pytest app/tests
   
   docker-build-push:
