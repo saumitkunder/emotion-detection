@@ -1,56 +1,54 @@
-import os
+
 import streamlit as st
-import tensorflow as tf
 import numpy as np
-from utils import preprocess_audio, get_emotion_label
+import tensorflow as tf
+import os
 
-# Path to the model
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "emotion_rnn_model.h5")
+# Handle imports for both local testing and Streamlit context
+if __name__ == "__main__":
+    from utils import preprocess_audio, get_emotion_label
+else:
+    from app.utils import preprocess_audio, get_emotion_label
 
-# Load the model with caching
+MODEL_PATH = "/Users/saumit/Projects/emotion-detection/model/emotion_rnn_model.h5"
+
 @st.cache_resource
 def load_model():
-    if not os.path.exists(MODEL_PATH):
-        st.error(f"Model file not found at {MODEL_PATH}. Please check!")
-        return None
+    """
+    Load the pre-trained RNN model for emotion detection.
+    Returns:
+        model: The loaded TensorFlow/Keras model.
+    """
     try:
-        # Load the fixed model
+        if not os.path.exists(MODEL_PATH):
+            st.error(f"Model file not found at {MODEL_PATH}. Please check!")
+            return None
         model = tf.keras.models.load_model(MODEL_PATH)
+        return model
     except Exception as e:
-        st.error(f"Failed to load model. Error: {str(e)}")
+        st.error(f"Failed to load model. Error: {e}")
         return None
-    return model
 
-# Load the model
-model = load_model()
+# Streamlit UI
+st.title("Audio Emotion Detection")
 
-# Streamlit app UI
-st.title("Audio Emotion Detection App")
-st.write("Upload an audio file to detect emotions.")
-
-# File uploader for audio input
-uploaded_file = st.file_uploader("Choose an audio file", type=["wav", "mp3"])
+uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3"])
 
 if uploaded_file is not None:
-    # Display the uploaded audio
-    st.audio(uploaded_file, format="audio/wav")
-
-    # Preprocess the audio file
-    st.write("Processing...")
     try:
-        audio_array = preprocess_audio(uploaded_file)
-        st.write(f"Preprocessed input shape: {audio_array.shape}")
-    except ValueError as e:
-        st.error(str(e))
-        st.stop()
+        st.audio(uploaded_file, format="audio/wav")
+        # Preprocess the uploaded audio
+        features = preprocess_audio(uploaded_file)
+        model = load_model()
+        if model is not None:
+            predictions = model.predict(features)
+            predicted_emotion = get_emotion_label(np.argmax(predictions))
+            st.success(f"Predicted Emotion: {predicted_emotion}")
+        else:
+            st.error("Model failed to load. Please check the logs.")
+    except ValueError as ve:
+        st.error(f"Error in processing the uploaded file: {ve}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
 
-    # Make predictions
-    if model:
-        try:
-            predictions = model.predict(audio_array)
-            emotion = get_emotion_label(np.argmax(predictions))
-            st.write(f"Predicted Emotion: {emotion}")
-        except Exception as e:
-            st.error(f"Prediction error: {str(e)}")
-    else:
-        st.error("Model could not be loaded.")
+
