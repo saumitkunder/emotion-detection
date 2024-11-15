@@ -2,10 +2,6 @@ import numpy as np
 import librosa
 import io
 
-import numpy as np
-import librosa
-import io
-
 def preprocess_audio(audio_file, sample_rate=22050, duration=3, n_mfcc=60):
     """
     Preprocesses the audio file for models expecting a flattened MFCC feature vector.
@@ -15,9 +11,9 @@ def preprocess_audio(audio_file, sample_rate=22050, duration=3, n_mfcc=60):
     - Trims or pads to a fixed duration.
     - Extracts MFCCs.
     - Averages across time steps to flatten into a 1D feature vector.
-    
+
     Args:
-        audio_file: The uploaded audio file (e.g., from Streamlit).
+        audio_file: The uploaded audio file (e.g., from Streamlit or in-memory).
         sample_rate: The target sample rate for audio processing.
         duration: The fixed duration (in seconds) for input audio.
         n_mfcc: The number of MFCC features to extract.
@@ -27,7 +23,7 @@ def preprocess_audio(audio_file, sample_rate=22050, duration=3, n_mfcc=60):
     """
     try:
         # Load the audio file
-        y, sr = librosa.load(io.BytesIO(audio_file.read()), sr=sample_rate, mono=True, duration=duration)
+        y, sr = librosa.load(audio_file, sr=sample_rate, mono=True, duration=duration)
 
         # Trim or pad to ensure fixed length
         max_len = int(sample_rate * duration)
@@ -46,29 +42,12 @@ def preprocess_audio(audio_file, sample_rate=22050, duration=3, n_mfcc=60):
     except Exception as e:
         raise ValueError(f"Error in preprocessing audio: {e}")
 
-
-
 def get_emotion_label(index):
     """
-    Maps a model prediction index to a human-readable emotion label.
-    
-    Args:
-        index: The index of the predicted emotion class (int).
-
-    Returns:
-        A string label corresponding to the emotion class.
+    Maps the model's prediction index to an emotion label.
     """
-    emotion_labels = {
-        0: "Happy",
-        1: "Sad",
-        2: "Angry",
-        3: "Neutral",
-        4: "Fearful",
-        5: "Surprised",
-        6: "Disgusted"
-    }
-    return emotion_labels.get(index, "Unknown")
-
+    labels = ["Neutral", "Happy", "Sad", "Angry", "Fearful"]
+    return labels[index]
 
 def load_sample_audio(file_path, sample_rate=22050, duration=3, n_mfcc=60):
     """
